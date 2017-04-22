@@ -1,15 +1,12 @@
 
 #define _BSD_SOURCE
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <stdbool.h>
-#include <unistd.h>
 
 #include <clang-c/Index.h>
-#include <dirent.h>
+
+#include "common.h"
+#include "gen_cmm.h"
+
 
 #define STDOUT_BUF_SIZ 10000
 #define MAX_LINE_NUM 10000
@@ -289,17 +286,21 @@ void test_compiler(const char *compiler_path, const char *test_case_path) {
         if (!memcmp(in_file->d_name, ".", 1)) {
             continue;
         }
-        sprintf(path_buf, "%s/%s", test_case_path, in_file->d_name);
-        fprintf(stderr, "%s\n", path_buf);
+        sprintf(path_buf, "%s%s", test_case_path, in_file->d_name);
+        fprintf(stderr, "testing: %s\n", path_buf);
         test_body(path_buf);
     }
 }
+
+#define TESTS_PATH "shit/"
 
 int main(int argc, char **argv) {
     srand(233);
     CC_PATH = "./Cmm-Compiler-master/Code/parser";
 //    test_body("test_case/bubble-sort.c");
 //    test_compiler(CC_PATH, "test_case");
-    test_body("test_case/ttttt.c");
+//    test_body("test_case/ttttt.c");
+    generate_tests(TESTS_PATH, 10);
+    test_compiler(CC_PATH, TESTS_PATH);
     return 0;
 }

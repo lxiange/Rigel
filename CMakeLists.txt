@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 99)
 
 include_directories("C:/Program Files/LLVM/include")
 
-set(SOURCE_FILES main.c gen_cmm.c gen_cmm.h)
+set(SOURCE_FILES main.c gen_cmm.c gen_cmm.h common.h)
 
 add_executable(test_clang_ast ${SOURCE_FILES})
 
