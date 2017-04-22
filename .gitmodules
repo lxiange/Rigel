@@ -1,0 +1,3 @@
+[submodule "csmith"]
+	path = csmith
+	url = git@github.com:lxiange/csmith.git

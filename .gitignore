@@ -1,0 +1,9 @@
+.idea/
+
+Cmm-Compiler-master/
+
+cmake-build-debug/
+
+csmith_hack/
+
+emi_checker
