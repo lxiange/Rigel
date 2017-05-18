@@ -29,7 +29,7 @@
 #define MAX_LINE_NUM 10000
 #define MAX_COL_NUM 1000
 //#define PATH_MAX 1024
-#define INSERTED_C_FILE "tmp_dir/inserted_my_func.c"
+#define INSERTED_C_FILE "tmp_dir/inserted_watch_point.c"
 #define RW_DECLARED_SOURCE "tmp_dir/temp_file_with_rw.c"
 #define RANDOM_GEN_FILE "tmp_dir/random_gen_file.c"
 #define IR_FILE_NAME "inter.ir"

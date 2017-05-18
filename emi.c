@@ -236,7 +236,7 @@ static void count_coverage(const char *cc_path, const char *test_file,
     memset(coverage_map, 0, sizeof(coverage_map));
 
     // generate AST to find where to insert watch point.
-    visit_file(test_file);
+    traverse_cmm_ast(test_file);
     insert_watch_point(test_file, INSERTED_C_FILE);
     cmm_compile(cc_path, NULL, INSERTED_C_FILE);
     exec_ir_for_cov(IR_FILE_NAME, origin_output, input_file);

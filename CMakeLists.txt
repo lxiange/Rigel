@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(test_clang_ast)
+project(Rigel)
 
 set(CMAKE_C_STANDARD 99)
 

@@ -52,7 +52,7 @@ static enum CXChildVisitResult visitor(CXCursor cursor, CXCursor parent /* no us
 
 
 
-void visit_file(const char *test_file) {
+void traverse_cmm_ast(const char *test_file) {
     CXIndex index = clang_createIndex(1, 1);
     CXTranslationUnit tu = clang_createTranslationUnitFromSourceFile(index, test_file, 0, NULL, 0, NULL);
     assert(tu);

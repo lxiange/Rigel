@@ -10,7 +10,7 @@
 
 extern char inserted_pos[MAX_LINE_NUM];
 
-void visit_file(const char *test_file);
+void traverse_cmm_ast(const char *test_file);
 
 int sem_check_by_clang(const char *test_file);
 

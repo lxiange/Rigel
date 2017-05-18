@@ -6,7 +6,7 @@
 
 // Why use global var? Because I don't care.
 
-#define TESTS_PATH "shit/"
+#define TESTS_PATH "generated_cmm/"
 
 int main(int argc, char **argv) {
     mkdir_ifnot_exist("tmp_dir");
