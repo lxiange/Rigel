@@ -9,7 +9,7 @@ RUN apt install -y m4 && \
     cd csmith && \
     ./configure && \
     cd .. && \
-    make && ls
+    make -j && ls
 
 VOLUME /rigel/compilers
 
