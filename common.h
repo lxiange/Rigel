@@ -22,6 +22,13 @@
 #include <sys/wait.h>
 #include <time.h>
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 #define STDOUT_BUF_SIZ 10000
 #define MAX_LINE_NUM 10000
@@ -39,7 +46,7 @@
 #define ENABLE_LOG 1
 
 #define debug_print(fmt, args...) \
-        do { if (ENABLE_LOG) fprintf(stderr, "%s@%d/%s: " fmt "\n", __FILE__, \
+        do { if (ENABLE_LOG) fprintf(stderr, ANSI_COLOR_YELLOW "%s@%d/%s: " ANSI_COLOR_RESET fmt "\n", __FILE__, \
                                 __LINE__, __func__, ##args); } while (0)
 
 

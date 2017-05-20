@@ -39,8 +39,8 @@ char coverage_map[MAX_LINE_NUM];
 unsigned CUR_SEED;
 
 void report_bug(enum BugType e) {
-    fprintf(stderr, "bug detail: %s\n", BUG_TYPE_TABLE[e]);
-    fprintf(stderr, "current seed: %d\n", CUR_SEED);
+    fprintf(stderr, ANSI_COLOR_RED "bug detail: %s\n" ANSI_COLOR_RESET, BUG_TYPE_TABLE[e]);
+    fprintf(stderr, ANSI_COLOR_MAGENTA "current seed: %d\n" ANSI_COLOR_RESET, CUR_SEED);
     assert(0);
 }
 
@@ -171,14 +171,14 @@ static void random_test(const char *cc_path, const char *cmm_flag, const char *t
         //todo: do it better.
         if (inserted_pos[cur_line] && rand_100() < 10) {
             int choice = rand() * (sizeof(STMT_TABLE) / sizeof(char *)) / RAND_MAX;
-            debug_print("choice: %d:\n%s", choice, STMT_TABLE[choice]);
+            debug_print("\nchoice: %d:\n%s", choice, STMT_TABLE[choice]);
             int rand_num = rand();
             fprintf(f_out, STMT_TABLE[choice], rand_num, rand_num, rand_num);
         }
 
         if (refactor_pos[cur_line] && rand_100() < 80) {// p=0.8 to change code.
             int choice = rand() * (sizeof(STMT_TABLE) / sizeof(char *)) / RAND_MAX;
-            debug_print("choice: %d:\n%s", choice, STMT_TABLE[choice]);
+            debug_print("\nchoice: %d:\n%s", choice, STMT_TABLE[choice]);
             int rand_num = rand();
             fprintf(f_out, STMT_TABLE[choice], rand_num, rand_num, rand_num);
         } else {
