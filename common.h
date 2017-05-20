@@ -8,8 +8,6 @@
 #define _BSD_SOURCE
 
 
-//#define RELEASE_MODE
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -36,7 +34,7 @@
 #define BEGIN_MAGIC "32432423"
 #define END_MAGIC "43253623"
 // todo: change the name.
-#define ITER_TIMES 2
+#define ITER_TIMES 3
 
 #define ENABLE_LOG 1
 

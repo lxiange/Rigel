@@ -13,4 +13,4 @@ RUN apt install -y m4 && \
 
 VOLUME /rigel/compilers
 
-ENTRYPOINT /rigel/Rigel
+CMD ["/rigel/Rigel"]
