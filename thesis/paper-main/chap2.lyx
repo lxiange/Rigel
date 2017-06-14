@@ -1,0 +1,479 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+示例
+\end_layout
+
+\begin_layout Standard
+编译器错误大体分为两种。第一种就如常规的软件 Bug：输入合法源文件，编译器运行时报错崩溃；或者传入非法源文件时，编译器却不报错。第二种更加隐蔽，即编译器可以正
+常执行并生成代码，但是得到的代码却不符合源程序语义，即生成的程序有 Bug 。
+\end_layout
+
+\begin_layout Standard
+第一种 Bug 比较容易检测，因为可以及时发现，并且不需要执行编译生成的目标文件。我们可以将其当作一般的软件 Bug 来看待。
+\end_layout
+
+\begin_layout Standard
+而第二种 Bug 就比较难以检测，并且危害更大。毕竟编译器是其他一切软件所依赖的基础设施，如果编译器生成了错误的代码，不但会导致编译生成的代码运行得到各种不确定
+性结果，产生巨大的破坏作用。更可怕的是此类 Bug 难以察觉与定位，并且会将程序员引入怀疑自己怀疑人生的无尽深渊。 
+\end_layout
+
+\begin_layout Section
+Ken Thompson 编译器后门
+\end_layout
+
+\begin_layout Standard
+说到编译器 Bug，讲一个有意思的故事。
+\end_layout
+
+\begin_layout Standard
+当年 UNIX 的发明者 Ken Thompson 在贝尔实验室里的 UNIX 系统中植入后门，他走到任何一台 UNIX 机器，都能用自己的用户名密码登录。后来
+其它人去掉了 UNIX 内核的后门，并重写了编译器重新编译操作系统，均不管用。
+\end_layout
+
+\begin_layout Standard
+原来，Ken Thompson 在 C 语言编译器里植入了一段恶意代码，使得它编译出来的程序都留有后门，这样他就可以任意登陆系统。更可怕的是，当这个编译器检测出
+是在编译自己时，将植入另一段恶意代码，使得编译得到的新编译器具有同样的性质（即在编译出的程序中植入后门）。只要使用过有后门的编译器，即使你的代码无比正确，得到的
+依然是有后门的程序。并且这个漏洞会一直传播下去，即使你能看见所有源码，或重写一个编译器来编译你的代码，也依然无法发现这个隐藏的漏洞，因为你的编译器依然要使用旧的
+编译器来编译。除非一开始所有工具都自己实现，不借助任何外部工具，不然永远无法绝对保证正确性，显然这是不可能的。
+\end_layout
+
+\begin_layout Standard
+事后，Ken 在论文 
+\shape italic
+Reflections on Trusting Trust
+\shape default
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "thompson1984reflections"
+
+\end_inset
+
+中详细阐述了一个值得信赖的编译器是多么重要。 
+\end_layout
+
+\begin_layout Section
+XcodeGhost 事件
+\end_layout
+
+\begin_layout Standard
+上述的故事并未单纯止步于一个恶作剧。这个方法后来被人利用，爆发了大名鼎鼎的“XcodeGhost 事件”。事件的大致经过，是开发者下载了包含恶意代码的编译器，导
+致编译生成的所有程序都被植入后门，产生隐私泄露、广告点击等问题。由于是开发端的程序污染，普通用户毫无防备能力，因为即使是从官方渠道下载安装的应用也会有此风险。事
+件的影响颇为广泛，对用户隐私安全造成极大危害，许多知名产品都被波及，如微信、网易云音乐、滴滴、高德等装机量达数亿的软件。
+\end_layout
+
+\begin_layout Standard
+由此可见编译器的重要性，它不仅仅会影响使用编译器的软件开发者，普通用户也会被间接地波及。所以对编译器进行全面、详尽的测试便显得尤为迫切。这不是一个只面向少数人的
+需求，而是一个可能影响数亿用户以及全球互联网基础设施的大问题。 
+\end_layout
+
+\begin_layout Section
+几个常见编译器 Bug 演示
+\end_layout
+
+\begin_layout Subsection
+第一类，编译器自身运行错误
+\end_layout
+
+\begin_layout Standard
+这类例子比较少见。因为如前文所说，此类 Bug 更容易被发现，因此编译器作者可能早早便发现并修复 Bug ，到用户层面时已经很难再撞见了。即便如此，人们还是有幸
+发现了 VC++ 编译器的一个内存泄露 Bug。在编译代码片段
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "testasm"
+
+\end_inset
+
+时，编译器会无限申请内存，并最终卡死。 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/test_asm.c"
+lstparams "language=C,float=hbp,basicstyle={\\ttfamily},keywordstyle={\\color{blue}},stringstyle={\\color{yellow}},commentstyle={\\itshape\\color{magenta}},columns=fixed,tabsize=4,frame=tb,framerule=1pt,extendedchars=true,showspaces=false,showstringspaces=false,numbers=left,numberstyle={\\tiny\\ttfamily},numbersep=1em,breaklines=true,breakindent=10pt,breakautoindent=true,captionpos=b,xleftmargin=1em,xrightmargin=1em,columns=c,flexiblecolumns=true,caption={testasm},label={testasm}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+编译器的输出为代码片段
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "vs-error"
+
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/vs_error.txt"
+lstparams "caption={vs error},label={vs-error}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+同时，内存被耗光，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:内存使用情况"
+
+\end_inset
+
+，
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:函数调用栈"
+
+\end_inset
+
+，
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:资源管理器"
+
+\end_inset
+
+所示，编译器申请过当内存，并最终崩溃。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/mem_use.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+内存使用情况
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:内存使用情况"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/fun_call_stack.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+函数调用栈
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:函数调用栈"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/res_manager.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+资源管理器
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:资源管理器"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+由于微软的 VC++ 编译器并未开源，因此我们无法查阅源码以追踪是何原因触发了这个 Bug。只能期待微软的编译器团队来打补丁修复了（经测试，在
+ Visual Studio 2017 中，此问题已被修复）。
+\end_layout
+
+\begin_layout Subsection
+第二类，编译生成错误代码
+\end_layout
+
+\begin_layout Standard
+编译器生成错误的代码，这是编译器 Bug 中占比最高的类型了，数量巨大，诱因也五花八门。虽然很多，但是事实上这些 Bug 都很难被发现，造成的潜在破坏也更为巨大
+。编译生成的错误程序在绝大多数情况下都可以正常运行得到正确结果，但是在一些极端案例下便会显露其狰狞面目，让程序开发者怀疑自己、思考人生。
+\end_layout
+
+\begin_layout Standard
+下面，我将通过几个例子，来展现编译器会如何编译、修改我们的代码，最终导致不确定性或错误的结果。 
+\end_layout
+
+\begin_layout Subsubsection
+LLVM 的 Bug
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/llvm_bug.c"
+lstparams "caption={Reduced version of the code for bug reporting.},label={llvm-bug-code}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+如代码片段
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "llvm-bug-code"
+
+\end_inset
+
+所示，如果正确编译的话，结构体中的成员都被初始化为1，因此条件判断不会成立，即程序不会运行至 abort。
+\end_layout
+
+\begin_layout Standard
+但是 LLVM 优化过程中，首先使用了
+\shape italic
+全域数值编号
+\shape default
+的方式，将结构体 s 当成一个 32bit 的整数来加载。然后，LLVM 使用
+\shape italic
+标量替换
+\shape default
+的方法，将结构体 s 的各个成员优化为栈上的局部变量。然而这两种优化方式会产生冲突，导致不确定性行为，继而导致结构体 s 并没有被正确初始化，引发程序运行时
+ abort。不过这个 Bug 并不一定会触发，只有在 LLVM 选择将 foo 函数内联时才会引发这个 Bug，而是否 inline，这又是由编译器选择的不确
+定性行为，导致极其难以复现和调试。
+\end_layout
+
+\begin_layout Subsubsection
+GCC 的 Bug
+\end_layout
+
+\begin_layout Standard
+不仅 LLVM 会有 Bug，GCC也不能幸免。这是一个GCC的例子，如代码片段
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gcc-bug-code"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/gcc_bug.c"
+lstparams "caption={GCC miscompiles this program to an infinite loop.},label={gcc-bug-code}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+这个例子中，因为C语言规定，未初始化的全局变量值为0（因为未初始化的变量是弱符号，在 .bss 段中，动态加载器保证其值为0），因此第二层循环不会执行，程序将很快
+执行完毕退出。
+\end_layout
+
+\begin_layout Standard
+但是 GCC4.8 编译产生了错误的代码，使得程序死循环。这是由于 GCC 采取了
+\shape italic
+局部冗余变量消除
+\shape default
+的技术，尝试将循环不变量外提以优化性能，所以将 2147483647 - b 这个表达式提取到了最外层循环体中。但如果这么做的话，当 b==1
+ 时，会造成整数溢出，而整数溢出是一个 undefined 的行为，所以编译器可以“为所欲为”地按照它自己的理解去生成代码，这其中就可能生成导致死循环的代码。当
+然，编译器这么做的同时也会给出 Warning，提示此处有 undefined 行为。我们知道，其实代码并不会执行到那里，整数也不会溢出，所以此代码中并不存在未
+定义行为，这是一个错误的 Warning。
+\end_layout
+
+\begin_layout Standard
+更为有意思的是，这段代码只在 GCC 的 -O2 优化选项时才会触发此 Bug，在更为激进的 -O3 选项下反而不会触发。
+\end_layout
+
+\begin_layout Standard
+编译器暴露这个 Bug 的唯一马脚，或许就是给出了一条错误的 Warning，提示这里有一个 undefined 行为吧。可惜估计大多数程序员看到这条警告，都只
+会略微检查一下，在确定代码没有问题后便不再关心了。
+\end_layout
+
+\begin_layout Standard
+有一句话叫：“Warning 是滋生 Bug 的温床。”看来这句话真是无比正确—— Warning 不但孕育着代码的 Bug，也可能意味着编译器的
+ Bug！ 
+\end_layout
+
+\begin_layout Section
+本章小结
+\end_layout
+
+\begin_layout Standard
+本章介绍了两类编译器 Bug：编译器自身运行时的错误以及编译器生成的程序运行错误。
+\end_layout
+
+\begin_layout Standard
+并列举了多个编译器不同类型 Bug 的例子，细致分析了这些 Bug 的触发条件、症状以及触发原因。再次阐述了编译器 Bug 的隐蔽性以及对编译器进行详尽测试的重
+要性。 
+\end_layout
+
+\end_body
+\end_document

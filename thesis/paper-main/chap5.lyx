@@ -1,0 +1,132 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+相关工作
+\end_layout
+
+\begin_layout Standard
+本次毕业设计以及 Rigel 项目，是基于大量现有编译器测试验证相关的研究工作实现的。没有他们的杰出成果，我一定无法完成我的项目。这一章节将感谢并详细介绍项目的
+相关工作。
+\end_layout
+
+\begin_layout Section
+EMI-based Compiler Testing
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+首先，最直接需要感谢的项目，便是苏振东教授提出的基于 EMI 的编译器检测方法。他的工作卓有成效，在检测 GCC 和 LLVM 编译器上取得了显著的效果。本次毕
+设的核心思路便完全参考了他的此篇论文。换言之，我的 Rigel 项目，便是在南京大学《编译原理》课程实验 C-- 编译器测试的特定应用场景下，对其论文思路的一种
+简易实现。虽然很钦佩和感谢苏教授的研究工作，但是本项目的代码为完全独立实现，没有对原作代码进行任何参考。
+\end_layout
+
+\begin_layout Section
+LLVM
+\end_layout
+
+\begin_layout Standard
+毫无疑问，在编译器领域，LLVM 是最杰出的项目之一。它不仅是一款杰出的 C/C++ 编译器，更是一套完整且功能强大的库。借助它，可以很方便地进行编程语言设计、
+代码分析、代码优化与生成等工作。本次实验中，借助了 LLVM 项目的前端：Clang 库来进行语法分析，这大大减轻的我的工作压力，因为我不再需要去手动实现
+ parser。同时，考虑到编译原理实验的 C-- 语言为 C 语言的子集，因此我也借助 Clang 来进行辅助语法检测。虽然本项目中只使用 LLVM
+ 来生成 AST，但是 LLVM 还有很多激动人心的功能，并且有规范的 API 和文档，值得向大家推荐。
+\end_layout
+
+\begin_layout Section
+Csmith
+\end_layout
+
+\begin_layout Standard
+Csmith 是一款用于自动随机生成合法 C++ 语言代码的工具。它也应该是目前唯一一款能够自动随机生成代码的工具。它的功能非常强大，几乎覆盖了庞大的
+ C++ 语法的方方面面。它也作为一款优秀的编译器检测工具，发现了许多 GCC 和 Clang 的 Bug。不过它并没有完全覆盖 C-- 语法，因此我对它做了一
+些改动，以适应我的项目需要。
+\end_layout
+
+\begin_layout Section
+IR Simulator
+\end_layout
+
+\begin_layout Standard
+非常感谢某位学长(学姐)编写的这个虚拟机小程序。这个虚拟机程序，是运行 C-- 编译生成的中间代码文件的平台，同时也是 Rigel 运行时必须依赖的平台。就好像
+玩电脑游戏必须要有一台电脑一样，测试编译器生成代码的正确性，也必须有这么一个虚拟机平台来运行生成的中间代码。此项目代码非常工整规范，鲁棒性很强，模块化做得很好，
+以至于我修改移植时并没有费太大功夫，再次对前人的工作表示感谢。
+\end_layout
+
+\end_body
+\end_document

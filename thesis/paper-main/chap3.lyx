@@ -1,0 +1,1080 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+实现
+\end_layout
+
+\begin_layout Standard
+在这一章节，我将详细介绍 EMI 算法，以及 Rigel 项目的整体设计与实现细节。同时也将介绍对现有 Csmith 项目和 IR Simulator
+ 项目的修改。并将重点介绍实现过程中的难点与创新之处。
+\end_layout
+
+\begin_layout Section
+EMI 算法
+\end_layout
+
+\begin_layout Subsection
+EMI 等价
+\end_layout
+
+\begin_layout Standard
+正如在第一章所说，EMI 是一种对各语言编译器通用的测试方法。所以在此小节我将不依赖于具体程序语言来详细介绍 EMI 的概念和方法。
+\end_layout
+
+\begin_layout Standard
+EMI 的概念是，在给定输入集上，程序/模块完全等价，即在此输入集上有完全相同的执行结果和副作用。所以我们先定义两个程序 EMI 等价的概念：
+ 
+\end_layout
+
+\begin_layout Standard
+给定两个程序 P, Q，
+\begin_inset Formula $\forall i\in I\,P(i)===Q(i)$
+\end_inset
+
+ ，即在此输入集上有完全相同的执行效果（同时包括结果和副作用），则称 Q 为 P 的 EMI 变种。 
+\end_layout
+
+\begin_layout Subsection
+产生 EMI 变种
+\end_layout
+
+\begin_layout Standard
+对于一个程序 P，产生其 EMI 变种有多种方式，但最终我们需要保证的是，生成的新程序Q在输入集上有完全相同的执行效果。
+\end_layout
+
+\begin_layout Standard
+因此，生成 EMI 变种面临两大难题：
+\end_layout
+
+\begin_layout Itemize
+采用何种方式来生成与源程序 EMI 等价的新程序？
+\end_layout
+
+\begin_layout Itemize
+如何验证生成的新程序与源程序 EMI 等价？
+\end_layout
+
+\begin_layout Standard
+对于第一个问题，我们可以想到，将那些程序运行过程中不会执行到的“死代码”删除或做一些合法的修改，是不会对原有的代码逻辑造成影响的。此外，在某些位置插入一些完全没
+有副作用的代码，也不会对源程序的逻辑造成影响。依此方法便可以生成与源程序 EMI 等价的新程序。
+\end_layout
+
+\begin_layout Standard
+对于第二个问题，其实也比较容易解决。虽然我们知道肯定无法穷举所有输入来证明两个程序完全等价，但是事实上我们也没有必要这么做，我们只要在一定的输入数据集
+ I 上进行测试即可。如果对于 I 中的任意输入 i，都可以验证两个程序得到相同结果，那么我们就可以说两个程序在输入集 I 上 EMI 等价（EMI
+ 原始定义其实就是在一定输入集合上的等价）。并且我们只需要保证“拒真率”为0，“认假率”不为0也没有太大的影响。毕竟所有的测试都不能保证一定能将所有
+ Bug 都全部查出来，那就变成了代码正确性证明了。如果想要查出更多 Bug，只要多随机运行几次测试即可。从这个角度来看，EMI 算法也算是一种随机算法了。
+ 
+\end_layout
+
+\begin_layout Subsection
+算法详解
+\end_layout
+
+\begin_layout Standard
+非常感谢 Prof.
+ Zhendong Su 提出的 EMI 算法模型，下面我想冒昧地引用一下
+\shape italic
+ Compiler Validation via Equivalence Modulo Inputs
+\shape default
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+ 论文中的算法图示，来详细介绍 EMI 编译器检测算法的详细实现步骤。 
+\end_layout
+
+\begin_layout Subsubsection
+Main process for compiler validation
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/emi_main.png
+	width 80line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Main process for compiler validation
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:emi-main"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+我们先来看算法
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:emi-main"
+
+\end_inset
+
+，EMI 编译器验证算法的主体执行流程：
+\end_layout
+
+\begin_layout Standard
+先做准备工作，将待测程序使用 -O0 参数编译，即不开启任何优化，这样可以保证最大程度的正确性。然后在给定输入集 I 上执行，得到在这个输入集上执行后的代码覆盖
+率以及用作参照的输出结果。事实上，编译得到的这个程序是否正确，以及此程序运行得到的是否是正确结果并不重要，因为只要对比发现不同结果，一定是编译器某个地方出错了。
+让编译器“自证”错误，这也是 EMI 算法的亮点之一。
+\end_layout
+
+\begin_layout Standard
+随后的工作就是多次迭代，生成 EMI 等价变种来进行测试验证。先生成 EMI 等价变种程序，然后在每一种编译器参数下（譬如 -O1，-O2，-O3），编译生成的
+等价源码，得到可执行文件。然后在输入集上执行新生成的程序，输出结果应与之前的参照输出完全相同。如果和之前的输出结果不等，那么显然就可以汇报一个编译器
+ Bug 了。
+\end_layout
+
+\begin_layout Subsubsection
+Generate EMI variant
+\end_layout
+
+\begin_layout Standard
+上述流程中被一带而过但却是最重要的一步，就是生成 EMI 等价变种。算法
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:gen-emi"
+
+\end_inset
+
+中详细介绍了生成 EMI 等价变种程序的流程。 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/gen_emi.png
+	width 80line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Generate EMI variant
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:gen-emi"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+如算法
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:gen-emi"
+
+\end_inset
+
+所示，先生成一份源程序副本，然后遍历每一条语句，进行随机删除操作。具体根据什么条件删除，以及如何删除，在 PruneVisit 中体现：
+\end_layout
+
+\begin_layout Standard
+如果一个语句没有被执行到（即之前运行时覆盖率为0），那么就以一定的概率随机删除它并返回。否则，就遍历该语句的所有子语句，递归进行这个随机删除操作。
+\end_layout
+
+\begin_layout Standard
+我在前面的章节也有提及，EMI 并不一定只采用随机删除死代码这一个方法，还可以进行随机修改、插入代码等等操作，只要保证修改后的代码和原程序等价即可。事实上，在
+ Rigel 项目中也是这么做的，尽可能让修改多样化，挖掘 EMI 方法的潜力。 
+\end_layout
+
+\begin_layout Subsubsection
+综合图示
+\end_layout
+
+\begin_layout Standard
+更精炼一点来介绍，用图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:统计覆盖率"
+
+\end_inset
+
+和图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:产生EMI变种"
+
+\end_inset
+
+便可以概括。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/emi_profile.png
+	width 80line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+统计覆盖率
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:统计覆盖率"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/emi_mutate.png
+	width 80line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+产生EMI变种
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "le2014compiler"
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:产生EMI变种"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+图中显示的是程序执行后的控制流，绿色标注的是执行覆盖到的部分，红色标注的是死代码。如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:统计覆盖率"
+
+\end_inset
+
+所示，先在输入集 I 上执行代码，得到覆盖率信息以及输出结果 O。图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:产生EMI变种"
+
+\end_inset
+
+表达的是对死代码进行随机删改，然后重新在输入集 I 上执行，应该与原程序得到完全相同的结果，即两者等价。
+\end_layout
+
+\begin_layout Section
+Rigel —— C-- 编译器检测工具
+\end_layout
+
+\begin_layout Subsection
+项目综述
+\end_layout
+
+\begin_layout Quote
+Rigel（参宿七）是 Orion（猎户星座）中最明亮的一颗恒星。从1943年以来，它的光谱就被当成其它恒星光谱分类的校准光谱之一。参宿七是一颗重要的航海星，因
+为它很明亮，又可以轻松地定出赤道的位置，这也意味着在全球各地的海洋都看得见它。
+\end_layout
+
+\begin_layout Standard
+Rigel 是一款基于 EMI 算法，依赖于 LLVM/Csmith 实现的自动化 C-- 编译器检测工具。可用于南京大学《编译原理》课程实验项目
+ C-- 编译器的测试与验证。它具有自动生成 C-- 源代码、词法/语法/语义检查、自动化随机测试等功能。 
+\end_layout
+
+\begin_layout Standard
+在这一小节，我将详细介绍我实现的基于 EMI 方法的 C-- 编译器检测工具—— Rigel 的实现细节与原理。 
+\end_layout
+
+\begin_layout Subsection
+代码框架
+\end_layout
+
+\begin_layout Standard
+Talk is cheap, 用代码说话，整个项目的工程目录如列表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "project_tree"
+
+\end_inset
+
+所示。
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/rigel_tree.txt"
+lstparams "caption={项目文件},label={project_tree}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+下面我将有选择性地详细介绍各个文件的意义与功能。 
+\end_layout
+
+\begin_layout Subsubsection*
+csmith/ & cmmsmith_help.txt
+\end_layout
+
+\begin_layout Standard
+csmith/ 是 Csmith 项目的目录，我将 Csmith 项目 fork 后作为 git submodule 引入进来，作为 Rigel
+ 项目的一个子项目。此项目中代码文件较多，因此无法详细列举说明。
+\end_layout
+
+\begin_layout Standard
+Csmith 项目原本作用是随机生成合法的 C++ 程序，因此需要对其进行改造，使其能够生成合法的 C-- 程序，这也是本次毕业设计一大难点所在。虽然改造后的程
+序生成的已经是 C-- 语言代码了（因此或许可以称之为 Cmmsmith），但是出于对原作者的尊重，该目录依然保留了 Csmith 的名称。
+\end_layout
+
+\begin_layout Standard
+cmmsmith_help.txt 是 Csmith(Cmmsmith) 程序的帮助文件，里面记录了一些配置参数。正常情况下你无需了解这个文件的内容，Rigel
+ 会自动调用 Csmith(Cmmsmith) 去生成合法的 C-- 程序。但如果你想要独立运行 Csmith(Cmmsmith) 项目，不妨看一下这个文件以了
+解其参数与用法。
+\end_layout
+
+\begin_layout Subsubsection*
+generated_cmm/
+\end_layout
+
+\begin_layout Standard
+这个文件夹用于输出 Csmith(Cmmsmith) 所生成的合法的 C-- 文法代码。Rigel 运行时将读取该文件夹下的所有文件作为测试用例对编译器进行测试
+。这个文件夹可以为空，由 Rigel 调用 Csmith(Cmmsmith) 来生成代码，也可以自己手动编写测试样例放进去。不过要注意的是，文件名需以
+ .c 为后缀。
+\end_layout
+
+\begin_layout Subsubsection*
+tmp_dir/
+\end_layout
+
+\begin_layout Standard
+顾名思义，这是一个临时目录，用于放置项目运行时生成的一些中间文件。你无需关心其中的内容，Rigel 会自动清理这些临时文件。不过当目标编译器未能通过测试，或
+ Rigel 项目崩溃（这个概率很低）时，这里的文件便对 Debug 很有帮助。你可以在这里找到具体是怎样的代码使得目标编译器未能通过测试，从而复现
+ Bug，以助于修正编译器。
+\end_layout
+
+\begin_layout Subsubsection*
+CMakeLists.txt & Makefile
+\end_layout
+
+\begin_layout Standard
+这是项目的构建文件，如果只需要在 Linux 环境下运行，只需要使用 Makefile 就足够了。不过如果有跨平台需求，那么可以使用 CMake
+ 来进行构建。
+\end_layout
+
+\begin_layout Subsubsection*
+irsim-cli.py & inter.ir
+\end_layout
+
+\begin_layout Standard
+这是经过改造的 IR Simulator 程序，负责运行生成的中间代码并验证输出是否相同，这也是本次项目一个关键步骤。我对原有的小程序进行了改造，去掉了图形界面
+和交互式接口，只保留了命令行调用的方式。Rigel 将调用这个 Python 小程序，用以执行待测编译器生成的 IR 代码，并收集输出结果来验证原程序与新程序是
+否 EMI 等价，从而检验编译器的正确性。
+\end_layout
+
+\begin_layout Standard
+inter.ir 文件是编译器生成的中间代码文件。按照《编译原理》课程实验的要求，实验手册规定生成的中间代码文件置于此，因此我们便约定中间代码生成至这个地方。不过
+你并不需要关心这个文件的内容，因为它也属于临时文件。当目标编译器未能通过测试时，你或许可以查看一下这个文件，以定位测试失败的位置。
+\end_layout
+
+\begin_layout Subsubsection*
+common.h
+\end_layout
+
+\begin_layout Standard
+这是项目的公共头文件，用于包含标准库头文件、定义一些项目中使用的常量、以及定义用于调试的宏。
+\end_layout
+
+\begin_layout Standard
+此外，这里还定义了项目的一些功能开关。Rigel 实现了许多功能，但是默认没有全部开启。如果有特殊需求，可以修改这里的一些宏开关，打开/关闭一些功能并重新编译，
+以实现定制化的功能。
+\series bold
+注意，当你要修改代码时，请确保清醒地知道自己在做什么。
+\end_layout
+
+\begin_layout Subsubsection*
+clang_helper.{c,h}
+\end_layout
+
+\begin_layout Standard
+这是与 Clang 库（不是 Clang 执行程序）进行交互的相关代码。本项目中借助 Clang 库来进行词法、语法分析，以生成 AST (抽象语法树)。然后遍
+历 AST，以达到修改 C-- 代码并生成其 EMI 变种的目的。在统计代码覆盖率时，也参考了 AST 上的节点类型信息，用以决定插入 watch
+ point 函数的位置。可以说，Clang 库是本项目中最重要的外部依赖。
+\end_layout
+
+\begin_layout Subsubsection*
+gen_cmm.{c,h}
+\end_layout
+
+\begin_layout Standard
+这是负责生成合法 C-- 程序的代码，代码主要功能是与 Csmith(Cmmsmith) 进行交互，传入恰当的运行参数，以向指定目录生成给定数量的合法
+ C-- 源文件。
+\end_layout
+
+\begin_layout Subsubsection*
+emi.{c,h}
+\end_layout
+
+\begin_layout Standard
+这是项目的主要逻辑代码，完整实现了基于 EMI 方法的编译器测试功能。具体来讲，有如下主要功能：
+\end_layout
+
+\begin_layout Itemize
+对 C-- 代码进行词法/语法分析和语义检测，以判断编译器前端部分的正确性。
+\end_layout
+
+\begin_layout Itemize
+统计代码执行覆盖率。
+\end_layout
+
+\begin_layout Itemize
+执行生成的 EMI 等价变种程序，并比对输出结果。
+\end_layout
+
+\begin_layout Itemize
+报告编译器 Bug，并定位错误位置。 
+\end_layout
+
+\begin_layout Standard
+当然，还提供了一个简洁的对外接口，以方便从外部调用。
+\end_layout
+
+\begin_layout Subsubsection*
+main.c
+\end_layout
+
+\begin_layout Standard
+这是 Rigel 的入口函数，同时也可以认为是本项目的测试入口。在这里定义了待测编译器的路径、生成的中间文件保存的位置以及随机数种子。然后依次调用自动生成
+ C-- 程序的函数和对编译器进行 EMI 检测的函数，并在最后统一汇报测试结果。当然，如果将本项目编译为库用以在外部调用的话，则无需关心 main
+ 函数的内容，它只是最上层的一个包装。
+\end_layout
+
+\begin_layout Subsubsection*
+Rigel
+\end_layout
+
+\begin_layout Standard
+这是最终编译生成的 Rigel 的可执行文件，直接运行即可。程序完成的工作如刚才 main 函数所述：自动调用 Csmith(Cmmsmith)
+ 生成测试代码，并调用相关函数基于 EMI 方法对编译器进行随机迭代测试。如果执行过程中待测编译器有任何 Bug ，你可以选择程序立即退出或是等待全部测试完毕后
+统一汇报错误。
+\end_layout
+
+\begin_layout Subsubsection*
+emi.png & outline.md
+\end_layout
+
+\begin_layout Standard
+这是项目的说明文档以及一些必要的配图。作为文档的一部分，因此也包含在项目之中。其中使用伪代码（代码片段
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "outline"
+
+\end_inset
+
+）描述了整个项目的执行逻辑，虽然和原始的 EMI 方法大同小异，但是依然有很多改动和创新点。 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/outline.txt"
+lstparams "caption={执行流程},label={outline}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+ReadMe.md
+\end_layout
+
+\begin_layout Standard
+项目的简短介绍文档。包含了项目的简单介绍以及持续集成的构建状态信息。
+\end_layout
+
+\begin_layout Subsubsection*
+Dockerfile
+\end_layout
+
+\begin_layout Standard
+这是项目的 Dockerfile。本项目采用容器化的管理方式以方便开发、测试和部署。为了方便调用 Clang 库，项目基于 LLVM-3.5 镜像来构建，镜像中同
+时安装了 Python 3.4 等工具。在确保了部署环境的隔离性的同时，也使本项目具有跨平台移植性和快速迭代部署能力。对代码进行任何修改后，使用
+ Docker 重新构建，即可得到最新的镜像。运行该镜像，即相当于运行本项目，一切都很方便简洁。
+\end_layout
+
+\begin_layout Subsubsection*
+.travis.yml
+\end_layout
+
+\begin_layout Standard
+这是 Travis CI 的配置文件。我们同时使用 Docker 和 Travis CI 来做持续集成，保证项目代码的鲁棒性，确保每次 commit/push
+ 都是健康可控的，这也是对代码质量的极大保障。 
+\end_layout
+
+\begin_layout Subsection
+函数功能说明
+\end_layout
+
+\begin_layout Standard
+介绍完项目框架后，再来详细介绍项目的实现细节，本节将从具体的函数出发，深入剖析 EMI 的算法与实现。 
+\end_layout
+
+\begin_layout Subsubsection*
+void generate_tests(const char *dst_dir, int cmm_file_num);
+\end_layout
+
+\begin_layout Standard
+如函数名所描述，此函数负责向指定目录随机生成指定数量的 C-- 测试程序。如果目标目录不存在则会自动新建文件夹，生成的文件名以数字命名，形如：1.c/2.c/3...。
+\end_layout
+
+\begin_layout Subsubsection*
+void generate_cmm(const char *outfile, unsigned seed);
+\end_layout
+
+\begin_layout Standard
+这个函数负责根据指定的随机数种子，生成 C-- 程序源代码。显然，generate_tests 是通过调用它来具体生成 C-- 程序源文件的。这是相对独立的函数
+，只需要和 Csmith(Cmmsmith) 进行交互。也就意味着，你可以在外部独立调用此函数生成 C-- 程序用作其他用途。并且此函数是确定性的，只要传入相同
+的种子，便一定会得到完全相同的结果，方便调试。
+\end_layout
+
+\begin_layout Subsubsection*
+int sem_check_by_clang(const char *test_file);
+\end_layout
+
+\begin_layout Standard
+使用 Clang 对 C-- 源程序进行辅助语义检查。如果源程序无任何词法/语法/语义错误，则返回0，否则返回非0值。该函数会自动向源程序添加
+ read/write 函数的声明，以使其满足 C 语法要求。
+\end_layout
+
+\begin_layout Subsubsection*
+void traverse_cmm_ast(const char *test_file);
+\end_layout
+
+\begin_layout Standard
+如函数名所述，该函数将遍历 C-- 源程序的抽象语法树。在遍历每个节点的过程中，执行相关函数（譬如判断代码是否可以删除、是否被覆盖等）。同样，此函数借助
+ Clang 生成的 AST 来实现，不用自己重新实现一遍 parser。
+\end_layout
+
+\begin_layout Subsubsection*
+void test_compiler(const char *cc_path, const char *test_case_dir);
+\end_layout
+
+\begin_layout Standard
+这个函数的功能是使用指定测试样例（通过 generate_tests 函数生成）来测试目标编译器。完全基于 EMI 方法进行测试，其中调用了如下几个函数：
+\end_layout
+
+\begin_layout Subsubsection*
+static void test_cmm_file(const char *cc_path, const char *test_file)
+\end_layout
+
+\begin_layout Standard
+根据一个给定的 C-- 源文件，基于 EMI 方法来测试编译器。
+\end_layout
+
+\begin_layout Subsubsection*
+static void insert_watch_point(const char *in_file, const char *out_file)/static
+ void count_coverage(const char *cc_path, const char *test_file, const char
+ *input_file, char *origin_output);
+\end_layout
+
+\begin_layout Standard
+插入监视函数，并执行以得到代码执行覆盖率。
+\end_layout
+
+\begin_layout Subsubsection*
+static void random_test(const char *cc_path, const char *cmm_flag, const
+ char *test_file, const char *origin_output, const char *input_file);
+\end_layout
+
+\begin_layout Standard
+根据代码执行覆盖率，对代码进行随机删改并测试，验证与原代码编译执行后的输出是否相同。这可以算作 EMI 的主体算法的实现。几个参数含义如下：
+\end_layout
+
+\begin_layout Itemize
+const char *cc_path 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+编译器程序路径。
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+const char *cmm_flag 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+编译器编译参数。
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+const char *test_file 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+待测试的 C-- 源文件。
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+const char *origin_output 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+没有经过任何修改、按照默认编译参数编译执行得到的输出结果。用于比较判断正确性。
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+const char *input_file
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+显然，自动测试过程中，是没有办法交互的。待测试的代码如需从 stdin 读取输入，则需要将输入预先存放在一个文件中，并将文件名传入。Rigel
+ 会自动读取此输入，并重定向至 IR Simulator 的 stdin 执行。如果无需输入文件，则传入 NULL 即可。
+\end_layout
+
+\begin_layout Standard
+考虑到绝大多数情况下，是无需读入输入文件的，因此在编译时，可以定义 ENABLE_INPUT 宏，决定是否允许传入输入文件。
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection*
+static int cmm_compile(const char *cc_path, const char *cmm_flag, const
+ char *test_file);
+\end_layout
+
+\begin_layout Standard
+这个函数负责根据给定的编译器执行程序路径、编译参数以及待编译文件路径，编译生成中间代码。目前编译参数只支持 
+\begin_inset Quotes eld
+\end_inset
+
+-O0
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+-O1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+-O2
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+-O3
+\begin_inset Quotes erd
+\end_inset
+
+, 如果编译器不支持编译参数，则可以传入 NULL 指针。因为历史原因，为保证代码和 IR Simulator 之间的兼容性，编译生成的中间代码默认保存在当前目
+录下的 inter.ir 文件中，同时约定 Rigel 去寻找这个文件并执行。
+\end_layout
+
+\begin_layout Subsubsection*
+static int sem_check(const char *cc_path, const char *cmm_flag, const char
+ *test_file);
+\end_layout
+
+\begin_layout Standard
+Rigel 借助了 Clang 库来进行辅助词法/语法/语义检查。考虑到 C-- 文法为 C 文法的子集（这一点，在改造后的 Csmith(Cmmsmith)
+ 中得以保证），因此可以期待待测编译器应该与 Clang 得到相同的检查结果。如果拒真或认假，那么就可以认为待测编译器有错误。
+\end_layout
+
+\begin_layout Standard
+其实这一步和 EMI 算法没有关系，即使不借助 Clang 进行辅助语法检查，依然可以单纯使用 EMI 方法来检验编译器错误。但是为了更好的检测效果，引入
+ Clang 进行辅助检查是一件有益无害的事情。
+\end_layout
+
+\begin_layout Subsubsection*
+static void exec_ir_code(const char *inserted_ir, char *output_buf, const
+ char *input_file);
+\end_layout
+
+\begin_layout Standard
+这个函数调用 IR Simulator 来执行生成的中间代码。执行过程中如果死循环则会报错退出。
+\end_layout
+
+\begin_layout Subsubsection*
+static void exec_ir_for_cov(const char *inserted_ir, char *output_buf, const
+ char *input_file);
+\end_layout
+
+\begin_layout Standard
+这个函数同样是调用 IR Simulator 执行生成的中间代码。不过这个函数被调用时，执行中间代码的目的是得到源代码的执行覆盖率，因此对于每个待测源文件，这个
+函数只会被调用一次。
+\end_layout
+
+\begin_layout Standard
+本着 DRY(Don’t Repeat Yourself) 原则，此函数和 exec_ir_code 都依赖 exec_ir_driver 函数来进行代理调用。
+ 
+\end_layout
+
+\begin_layout Subsection
+其他工作
+\end_layout
+
+\begin_layout Subsubsection
+对 Csmith 的修改
+\end_layout
+
+\begin_layout Standard
+原版的 Csmith 功能非常强大，它支持庞大而臃肿的 C++ 语法，以及很多 C 语言中几乎很少用到的特性。在本项目中，这些强大的特性反倒是累赘，因此必须对
+ Csmith 做个性化的定制以生成合法的 C-- 文法程序，满足本项目需求。
+\end_layout
+
+\begin_layout Standard
+首先，Csmith 与本项目有如下一些不兼容之处：
+\end_layout
+
+\begin_layout Paragraph
+数组初始化
+\end_layout
+
+\begin_layout Standard
+C-- 文法里，是不支持数组直接初始化赋值的，而 C 语言中可以，并且经常这么做。同时 Csmith 里，没有配置选项可以关闭这个特性。因此必须手动修改，将原本
+数组初始化的代码，改写成定义数组、再循环赋值的形式。
+\end_layout
+
+\begin_layout Paragraph
+for 循环
+\end_layout
+
+\begin_layout Standard
+比较有趣的是，Csmith 生成的所有循环，都是用 for 来实现的，没有 while 语句。与此同时，C-- 却只支持 while 循环，因此需要将所有的
+ for 循环改写为 while 循环的形式。不过好在方法也比较简单：将 for 的初始化语句放置在 while 语句前，同时将循环变量自增语句放置在循环体最后
+，这样就可以近似地将 for 语句改写为 while 语句。之所以说近似，是因为两者之间并不完全等价，譬如：
+\end_layout
+
+\begin_layout Itemize
+for 语句引入独立的作用域，在 for 语句中定义的循环变量作用域只在 for 语句中有效，而 while 语句则必须将循环变量定义在外部作用域中。
+\end_layout
+
+\begin_layout Itemize
+for 语句执行过程中，如果遇到 continue 语句，最后的循环自增语句依然执行，而通过此方法模拟的 while 语句则直接跳转至下一轮循环，没有机会执行循
+环变量自增语句。
+\end_layout
+
+\begin_layout Standard
+不过好在 C-- 中所有变量都是全局作用域，并且不支持 continue 关键词，因此不会出现歧义。可以安全地使用这个方法将 for 语句改写为
+ while 语句。
+\end_layout
+
+\begin_layout Paragraph
+自增/自减/复合赋值运算符
+\end_layout
+
+\begin_layout Standard
+在 C 语言中，形如 ++i/i++/i+=1 这样的自增/自减/复合赋值运算符是非常常见的。因此，Csmith 中同样没有给出配置参数，而是默认就会生成带自增
+/自减/复合赋值运算符的语句。然而 C-- 文法中却不支持自增/自减/复合赋值运算符，所以需要将此类运算符转换为普通的二元运算和赋值语句。譬如将
+ i+=1 替换为 i=i+1。将 ++i/i++ 替换为 i=i+1，但这么做会有一点问题：当自增运算不是语句而是作为表达式时，i++ 与 i=i+1
+ 等价，但和 ++i 不等价。不过好在我们保证不会生成这种严重不规范的代码，因此这也不是一个问题。
+\end_layout
+
+\begin_layout Paragraph
+volatile/void/union… 等关键词
+\end_layout
+
+\begin_layout Standard
+由于 C-- 只支持有限的 C 语言文法，而标准 C 语言(C89)中，有 24 个关键词，而 C-- 中只有 struct, return,
+ if, else, while, int, float 这七个关键词。所以需要限制 Csmith(Cmmsmith) 只生成含有这七个关键词的代码。
+\end_layout
+
+\begin_layout Paragraph
+include/宏/声明
+\end_layout
+
+\begin_layout Standard
+C-- 文法非常简单，不支持如 include、宏定义等预处理命令。同样也不支持函数和变量的声明，所以也要将这部分内容删去。
+\end_layout
+
+\begin_layout Paragraph
+read/write 函数
+\end_layout
+
+\begin_layout Standard
+C-- 内建了 read/write 函数供输入输出使用，并且无需声明。同时，write 函数也是获取 C-- 代码执行结果的唯二方法之一（另一个是通过
+ main 函数的返回值）。因此生成的代码中，要调用 write 函数将结果打印，这样我们才能了解到代码的执行情况。
+\end_layout
+
+\begin_layout Paragraph
+只有 int 类型
+\end_layout
+
+\begin_layout Standard
+由于在实验三中，我们限制了程序中只会有十进制的 int 类型字面量，并且输入输出都为 int 类型。所以我们同样需要在 Csmith(Cmmsmith)
+ 中限制生成的代码只有十进制的 int 类型字面量，并且所有变量以及输入输出都应为 int 类型。
+\end_layout
+
+\begin_layout Subsubsection
+对 IR Simulator 的修改
+\end_layout
+
+\begin_layout Standard
+由于 EMI 算法的要求，在两个地方需要执行编译生成的代码：
+\end_layout
+
+\begin_layout Itemize
+将待测源代码编译执行，得到代码执行覆盖率。
+\end_layout
+
+\begin_layout Itemize
+编译执行生成的 EMI 变种，检验输出是否与原输出相同。
+\end_layout
+
+\begin_layout Standard
+然而，原有的 IR Simulator 小程序并不能直接调用，必须加以改造，以适应项目需要。主要做了如下改动：
+\end_layout
+
+\begin_layout Itemize
+去掉 GUI，只保留核心的虚拟机部分。
+\end_layout
+
+\begin_layout Itemize
+升级 Python2 为 Python3。
+\end_layout
+
+\begin_layout Itemize
+改造输入输出部分，以方便统计执行覆盖率及比较输出是否相等。
+\end_layout
+
+\begin_layout Section
+本章小结
+\end_layout
+
+\begin_layout Standard
+本章先介绍了 EMI 的定义，分析其可行性，并详细介绍了算法的执行步骤。随后重点介绍基于 EMI 算法原理实现的 C-- 编译器检测工具—— Rigel，对项目
+设计架构进行梳理，并对重点逻辑代码进行详细阐述，同时介绍了对 Rigel 所依赖的外部项目做出的一些修改。集中展现了本次毕业设计的重点、难点与亮点工作。
+\end_layout
+
+\end_body
+\end_document

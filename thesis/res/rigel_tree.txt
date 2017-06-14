@@ -1,0 +1,39 @@
+﻿$ tree /a /f
+Rigel:
+|   .gitignore
+|   .gitmodules
+|   clang_helper.c
+|   clang_helper.h
+|   CMakeLists.txt
+|   common.h
+|   cmmsmith_help.txt
+|   emi.c
+|   emi.h
+|   emi.png
+|   Rigel
+|   gen_cmm.c
+|   gen_cmm.h
+|   irsim-cli.py
+|   inter.ir
+|   main.c
+|   Makefile
+|   outline.md
+|   ReadMe.md
+|   Dockerfile
+|   .travis.yml
+|
++---csmith
+|   +---...
+|   +---...
+|   \---...
+|
++---generated_cmm
+|       0.c
+|       1.c
+|       2.c
+|       xxx.c
+|  
+\---tmp_dir
+        inserted_watch_point.c
+        temp_file_with_rw.c
+        random_gen_file.c

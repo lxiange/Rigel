@@ -1,0 +1,849 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+运行以及结果
+\end_layout
+
+\begin_layout Standard
+这一章节将集中演示 Rigel 的运行方式，并给出几个例子来演示代码的输出结果。同时也将介绍一下如何修改代码以适应不同的需求。
+\end_layout
+
+\begin_layout Section
+构建
+\end_layout
+
+\begin_layout Standard
+首先，来讲一下项目的构建方式。因为项目用到了 Clang 等工具，手动去配置环境显然比较麻烦，因此我们采用了 Docker 来构建和部署。
+\end_layout
+
+\begin_layout Standard
+项目代码中已经包含了 Dockerfile，因此，只需要在 shell 中按照代码清单
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "build_cmd"
+
+\end_inset
+
+执行，即可构建项目（宿主机需安装 docker，并可以访问互联网）。
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/docker_build.sh"
+lstparams "caption={构建指令},label={build_cmd}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+依此步骤执行，屏幕上会打印许多编译日志信息，见图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:构建输出"
+
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/build_info.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+构建输出
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:构建输出"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+如果没有出错的话，最后一条命令会在屏幕上显示构建完成的镜像，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:镜像列表"
+
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/image_list.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+镜像列表
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:镜像列表"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+运行
+\end_layout
+
+\begin_layout Standard
+我们已经得到了包含项目源代码、执行文件及其依赖环境的镜像，下一步就是运行此镜像。
+\end_layout
+
+\begin_layout Standard
+首先，在当前目录下新建一个 compilers 目录，用以放置待测编译器的二进制执行文件。由于 docker 类似于虚拟机，不能直接通过命令行读取宿主机文件，因
+此必须通过此种挂载文件夹的方式来传递文件。准备好后，在 shell 中输入代码清单
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "auto_run_cmd"
+
+\end_inset
+
+执行。
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/docker_auto_run.sh"
+lstparams "caption={自动运行指令},label={auto_run_cmd}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Rigel 会自动寻找放置在 compilers 文件夹下的待测 C-- 编译器。运行此命令，则会对该编译器进行自动化随机测试。
+\end_layout
+
+\begin_layout Standard
+当然，你也可以选择手动进入容器的方式来运行代码，这样你可以获得更多信息，或对代码进行修改并重新编译。命令参见代码清单
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "docker_run_cmd"
+
+\end_inset
+
+。 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "../res/docker_run.sh"
+lstparams "caption={手动运行指令},label={docker_run_cmd}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+这样，你便进入了一个类似虚拟机的运行环境，此环境下已经准备好了代码运行的所有依赖项目。项目相关文件都在 /Rigel 文件夹下，除此之外，此环境与宿主机是完全隔
+离的。
+\end_layout
+
+\begin_layout Section
+输出
+\end_layout
+
+\begin_layout Standard
+可以正常运行后，下面来解析一下程序的输出信息。
+\end_layout
+
+\begin_layout Standard
+项目编译时，可以设置 ENABLE_LOG 宏，选择是否输出详细日志。默认我们尽可能输出更详细的信息，如果只关心测试结果的对错，可以将 ENABLE_LOG
+ 宏设置为0。
+\end_layout
+
+\begin_layout Standard
+代码中采用了彩色输出，调试输出为黄色，错误报告为红色，测试全部通过时则为绿色输出。如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:输出示例"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/nobugfound.png
+	BoundingBox 0bp 0bp 864bp 842bp
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/bugfound.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+输出示例
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:输出示例"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+其中，调试输出的格式为：
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+{所在源文件}@{所在行号}/{所在函数}: {调试输出内容}
+\end_layout
+
+\begin_layout Standard
+错误输出会提示 Bug 的类型，目前支持：
+\end_layout
+
+\begin_layout Itemize
+COMPILE_TIME_OUT: 编译超时
+\end_layout
+
+\begin_layout Itemize
+CODE_DEAD_LOOP: 代码死循环
+\end_layout
+
+\begin_layout Itemize
+NO_IR_CODE_FOUND: 没有生成 IR 代码
+\end_layout
+
+\begin_layout Itemize
+OUTPUT_MISMATCH: EMI 变体程序输出与原输出不同
+\end_layout
+
+\begin_layout Itemize
+FALSE_ACCEPT: 接受了非法的 C-- 源文件
+\end_layout
+
+\begin_layout Itemize
+TRUE_REJECT: 拒绝了合法的 C-- 源文件
+\end_layout
+
+\begin_layout Section
+示例
+\end_layout
+
+\begin_layout Standard
+对于开发测试而言，测试一个完全正确或是错得离谱完全不能用的编译器是很无趣的，且对项目开发帮助不大，因为它们并不能展现 Rigel 的威力。最好的情况就是有一个只
+在部分情况下会出错的待测编译器，这也和现实情况相吻合，毕竟 GCC/Clang 等编译器大多数情况下都是正确的，只在某些极端情况下会出错。在此感谢陈越琦同学提供
+了这么一款满足要求的 C-- 编译器(
+\begin_inset CommandInset href
+LatexCommand href
+name "Cmm-Compiler"
+target "https://github.com/chenyueqi/Cmm-Compiler"
+
+\end_inset
+
+)供开发测试使用。
+\end_layout
+
+\begin_layout Standard
+下面我将展示几个正确或错误的例子，并详细解释说明其输出含义。
+\end_layout
+
+\begin_layout Subsection
+正确例子
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/correct.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+测试通过输出
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:测试通过输出"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:测试通过输出"
+
+\end_inset
+
+，编译器通过了所有测试样例多轮的检测，暂时没有发现错误。
+\end_layout
+
+\begin_layout Subsection
+错误例子
+\end_layout
+
+\begin_layout Subsubsection*
+认假
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/false_accept.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+认假
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:认假"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:认假"
+
+\end_inset
+
+，Rigel 发现待测编译器接受了错误的代码，因此报错退出。触发错误的代码见图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:触发认假Bug-的代码"
+
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/FA_code.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+触发认假 Bug 的代码
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:触发认假Bug-的代码"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+C-- 文法不支持隐式类型转换，因此 while 中的判断语句是不符合 C-- 语法规范的。然而待测编译器却没有报错，而是默默生成了中间代码。不过即便如此，这段
+代码也并不会死循环，但是编译器却生成了会死循环的代码。Rigel 正确地找出了这个 Bug。
+\end_layout
+
+\begin_layout Subsubsection*
+死循环
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/dead_loop.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+死循环
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:死循环"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:死循环"
+
+\end_inset
+
+，生成的中间代码在 IR Simulator 中执行时超时，我们认为代码陷入死循环，因此报错退出。图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:触发死循环-Bug-的代码"
+
+\end_inset
+
+展示了触发了这个超时错误的代码。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/DL_code.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+触发死循环 Bug 的代码
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:触发死循环-Bug-的代码"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+显然，图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:触发死循环-Bug-的代码"
+
+\end_inset
+
+中的这段代码并不会死循环，应该很快就执行完毕退出。但是生成的 IR 代码却执行了相当长的时间还没有结束，这不符合语义。所以我们认为这是编译器的
+ Bug，它生成了死循环的代码。
+\end_layout
+
+\begin_layout Subsubsection*
+拒真
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/true_reject.png
+	width 100line%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+拒真
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:拒真"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:拒真"
+
+\end_inset
+
+所示，待测编译器提示15、25、28、36行有语法错误，因此中断编译，没有生成 IR 代码。然而 Rigel 认为这是合法的 C-- 代码，编译器理应正确编译生
+成 IR 代码，事与愿违，所以 Rigel 报了 
+\shape italic
+NO_IR_CODE_FOUND
+\shape default
+ 的错误。图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:被拒的正确代码"
+
+\end_inset
+
+展示了被待测编译器拒绝的 EMI 变种 C-- 源文件。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../res/TR_code.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+被拒的正确代码
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:被拒的正确代码"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+显然，在图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:被拒的正确代码"
+
+\end_inset
+
+中， 15、25、28、36 行，都是完全合法的 C-- 代码，虽然代码看起来比较诡异，但却是完全合法的。很遗憾，待测编译器却拒绝了合法的代码，所以这是它的
+ Bug。
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+通过上述几个例子，我们充分感受到 Rigel 的强大威力，它能正确找出许多难以发现的潜在编译器 Bug。然而由于篇幅限制，我无法在此演示 Rigel
+ 的全部功能，更多用法请参见文档与代码。
+\end_layout
+
+\begin_layout Section
+本章小结
+\end_layout
+
+\begin_layout Standard
+本章详细介绍了 Rigel 的构建、运行方式，以及如何修改代码以适应不同需求。并通过几个实际的编译器错误的例子来帮助理解 Rigel 的输出格式，通过这几类常见
+的编译器 Bug，展现了 Rigel 的强大能力，既不会遗漏，更不会错杀。
+\end_layout
+
+\end_body
+\end_document

@@ -1,0 +1,4 @@
+error C2414: illegal number of operands
+error C2414: illegal number of operands
+error C2400: inline assembler syntax
+error in ‘opcode’; found ‘end of file’ fatal error C1060: compiler is out of heap space 

@@ -1,0 +1,244 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+引言
+\end_layout
+
+\begin_layout Standard
+编译器是计算机科学发展史上最重要的软件系统之一。人类构建代码世界，都必须要通过编译器这个中间层来与机器交互。人们一直幻想“自动写代码”，殊不知，编译器其实就是这
+么一个自动编写代码的工具：人类通过高级语言描述目的，然后交由编译器去自动生成机器代码。因此编译器就是人类思想与计算机硬件之间的桥梁，人类借助编译器，驾驭强大的硬
+件计算资源，解放和发展生产力。
+\end_layout
+
+\begin_layout Standard
+凡是上了一定规模的项目，就必然会存在Bug，很遗憾，编译器也无能幸免。由于编译器的特殊性，一旦编译器出现 Bug ，往往更难排查，并且造成的损失也更大。因为当程
+序出现异常输出时，程序员往往会怀疑是自己代码的错误，而不会轻易归咎于编译器（事实上，绝大多数情况下错误的根源确实不在编译器）。现有的主流编译器就那么几种，一旦任
+一款编译器出现任何Bug，将影响不计其数的项目。并且这是一种“无差别杀伤”，可能影响任何系统，包括金融、军事等核心领域，对人类社会造成巨大影响。
+\end_layout
+
+\begin_layout Standard
+证明代码的正确性，工业界的做法是进行足够充分的测试，学术界的做法是进行理论的证明。
+\end_layout
+
+\begin_layout Standard
+单纯追求“无Bug”，理论上是可以实现的。如通过形式语言证明的 CompCert 编译器，它在 C99 标准的子集和部分硬件平台上，通过 Coq
+ 证明了其生成代码的完备性，专门用于对可靠性要求极高的场景，但是它牺牲了灵活性、通用性和性能。
+\end_layout
+
+\begin_layout Standard
+不过人类对性能的渴望是无止境的，并且就目前而言人们已经可以接受用极小的错误率来换取性能的提升。这也是为什么软件工程中，更多的是在写测试以检验代码“没有错”，而不
+是来证明代码“正确”。CompCert 只能对代码做有限的优化，生成的机器码质量较差，因此其远没有 GCC/Clang 流行。
+\end_layout
+
+\begin_layout Standard
+现阶段编译器的研究热点，主要还是集中在优化上。而优化无可避免地会带来更多潜在的 Bug，所以充足的测试显得更为重要。测试的充分性，不仅体现在足够多的测试样例上，
+还要依赖先进完备的测试方法。下面我们就来介绍一种高效、可靠、通用的编译器测试方法——EMI(Equivalence Modulo Input)
+ 
+\end_layout
+
+\begin_layout Section
+EMI
+\end_layout
+
+\begin_layout Standard
+EMI 是一种可靠且通用的编译器测试方法。它的基本思想是分析在给定输入集 I 上程序 P 执行的控制流，然后在保证控制流不被改变的情况下修改源程序为
+ Q ，并重新执行。理论上，改造后的 Q 程序应该与源程序 P 是完全等效的，因此在输入集 I 上执行也理应得到完全相同的结果，即：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\forall i\in I,\,Comp(P)(i)===Comp(Q)(i)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+显然我们可以得出结论：如果出现不等的情况，那一定是 Compiler 出错了（如果 P 到 Q 的转换是准确无误的话）。
+\end_layout
+
+\begin_layout Standard
+尤其在测试编译器优化错误时更为有效。因为编译器的优化工作原理，往往是基于控制流分析来实施各种激进的优化策略。EMI通过对源程序的修改，在保证程序等效性的同时，打
+乱了程序结构，使编译器优化错误更容易暴露出来。
+\end_layout
+
+\begin_layout Standard
+总体而言，EMI 有如下的优点：
+\end_layout
+
+\begin_layout Enumerate
+它是通用的编译器测试方法，可以广泛用于各种语言的编译器。
+\end_layout
+
+\begin_layout Enumerate
+它测试效率更高，一个测试样例可以通过修改代码结构，生成多份测试代码。
+\end_layout
+
+\begin_layout Enumerate
+它可以使用现实世界的代码作为测试样例，一方面减轻了测试的负担，另一方面也使其测试更有现实意义。
+\end_layout
+
+\begin_layout Enumerate
+它的测试更全面，更容易覆盖边界情况，更容易触发隐藏很深的罕见 Bug，并且这个过程是全自动的。 
+\end_layout
+
+\begin_layout Section
+Rigel
+\end_layout
+
+\begin_layout Standard
+基于 EMI 算法的原理，我实现了一个用于检测编译原理课程实验的 C-- 编译器的测试工具：Rigel
+\end_layout
+
+\begin_layout Standard
+EMI 算法是一套通用的编译器检测模型。具体应用到 C-- 编译器上，我的策略有：
+\end_layout
+
+\begin_layout Itemize
+将输入放在源码中。虽然我也实现了从外部读取输入的功能，但是这样的话对于每个源文件，都要另外准备一个输入文件，测试效率大大降低，并且也不利于批量自动生成合法的测试
+样例。可以证明的是，将输入写在源码中和从外部读取输入的测试效果是完全等效的。
+\end_layout
+
+\begin_layout Itemize
+通过插入 Watch point 函数的方式来统计得到语句的执行覆盖率。虽然说这样无法得到行级覆盖率，但事实上也没有必要非得与 Gcov 一样去统计行覆盖率。因
+为我们是对程序的 AST 进行操作，以 AST 节点为粒度单位反而比以源代码行号表示更加直观。并且实现起来，无需关注底层细节（不像一般的代码覆盖率工具是通过插入
+二进制代码的方式实现），更容易且具有通用性。另一方面，统计覆盖率的过程，也同时可以看作是对编译器生成的程序进行运行时检测的过程。
+\end_layout
+
+\begin_layout Itemize
+通过插入、删除代码的方式，来生成 EMI 等效程序。相比于原论文中只采用“剪枝”的方法，我额外使用了插入/修改代码的方式，以体现测试的多样性。当然，可以保证，经
+过插入/修改代码后生成的代码与原程序等价。 
+\end_layout
+
+\begin_layout Standard
+Rigel 的详细实现细节请参见第三章。
+\end_layout
+
+\begin_layout Section
+总体工作
+\end_layout
+
+\begin_layout Standard
+总的来说，本次毕业设计，我主要做了以下一些工作：
+\end_layout
+
+\begin_layout Enumerate
+随机生成合法的 C-- 程序
+\end_layout
+
+\begin_layout Enumerate
+统计 C-- 代码覆盖率
+\end_layout
+
+\begin_layout Enumerate
+对代码修改，生成等价程序
+\end_layout
+
+\begin_layout Enumerate
+自动化执行并测试 C-- 程序，以检验 C-- 编译器的错误 
+\end_layout
+
+\begin_layout Section
+论文结构
+\end_layout
+
+\begin_layout Standard
+本论文的结构大体如下：
+\end_layout
+
+\begin_layout Standard
+在本章节中，我介绍了编译器测试的重要性和本次毕设项目的大体内容与实现思路。并于本章节的最后介绍了论文的组织结构。
+\end_layout
+
+\begin_layout Standard
+第二章将通过几个具体的例子，来切实感受编译器 Bug 的隐蔽性及其带来的巨大影响。
+\end_layout
+
+\begin_layout Standard
+第三章将详细介绍项目的实现细节，以及我认为比较重要的经验之谈和注意事项，并对代码结构进行梳理。
+\end_layout
+
+\begin_layout Standard
+第四章将具体介绍如何运行本项目以及如何进行修改，以应对不同需求。同时将展示 Rigel 的实际运行效果。
+\end_layout
+
+\begin_layout Standard
+第五、六、七章将介绍相关工作、结论和后续工作等。 
+\end_layout
+
+\end_body
+\end_document

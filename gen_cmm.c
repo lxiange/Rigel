@@ -27,6 +27,7 @@ void generate_cmm(const char *outfile, unsigned seed) {
     while (fgets(buf, BUFSIZ, p_file) != NULL) {
         fputs(buf, cmm_code);
     }
+    free(cmd);
     pclose(p_file);
     fclose(cmm_code);
 }

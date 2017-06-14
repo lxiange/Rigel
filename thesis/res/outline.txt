@@ -1,0 +1,21 @@
+cc=COMPILER_TO_CHECK
+for each test.c:
+    CHECK_SYNTAX_CHECK:
+    check_src_validation_by_clang(add read()/write() delcation.) 
+        and compile_by_cc (they should be same)
+    
+    GET_CODE_COV:
+    insert _my_func in test.c(use clang to find where to insert)
+    cc compile test_inserted.c > a.ir
+    for all inputs:
+        a.ir executed by irsim-cli.py
+        parse stdout and get coverage.
+    get code coverage  <input, output>
+    
+    ITERATE:
+    random delete(or change) unexecuted code, get test_new.c 
+    for all optimization level:
+        cc compile test_new.c > a_new.ir
+        for all inputs:
+            a_new.ir executed by irsim-cli.py
+            assert(a_new.ir(input)==output[input])

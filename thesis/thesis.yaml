@@ -1,0 +1,60 @@
+# 论文信息和设置
+# 修改后运行run.py更新。需要关闭LyX文档再打开以生效。
+
+# 排版设置
+font-song: SimSun     # 宋体(正文)字体
+font-hei: SimHei      # 黑体(粗体)字体
+font-kai: KaiTi       # 楷体(斜体)字体
+add-to-preamble: |    # LaTeX导言区加入定制内容
+    % \setmainfont{Palatino} % Roman
+    % \setsansfont{Arial} % Sans Serif 
+    \usepackage{tikz}
+    \usepackage{pgfplots}
+    \usepackage{xcolor}
+    \usepackage{hyperref}
+
+# 论文信息
+degree-cn: 学士
+degree-en: Bachelor of Science
+title-cn: 基于 EMI 的编译器测试工具
+title-en: EMI based compiler testing tools
+author-cn: 李想
+author-en: Shawn Lee
+supervisor-cn: 许畅~教授
+supervisor-en: Prof. Chang Xu
+date-cn: 2017年6月2日
+date-en: June 2, 2017
+
+# 其他信息
+xuehao: 131220088  # 学号
+grade: 2013 # 博士入学年级
+defense-date: 2017年6月8日  # 答辩日期
+subject-cn: 计算机科学与技术 # 专业名称
+subject-en: Computer Science
+direction-cn: 编译器测试 # 研究方向
+wheresubmit-en: the graduate school of Nanjing University # submitted to ...
+department-en: Department of Computer Science and Technology # 院系
+
+# 中文摘要关键字，可使用LaTeX代码
+abstract-cn: |
+    本论文介绍了一种简单、通用的编译器检测方法：EMI(equivalence modulo inputs)。该方法基于以下两步来测试编译器：
+    1.	动态地在给定测试输入集上运行得到程序控制流；
+    2.	基于程序控制流，生成等效程序执行比对测试。
+    事实上，这些不同的输入自然地帮助生成 EMI 变种，以帮助我们测试常规方法难以发现的编译错误。
+    为了实现 EMI 算法去检测目标编译器正确性，我们分析程序的执行路径，并随机删改未执行的代码以生成等价变种程序并运行。
+    我实现的基于 EMI 算法的 Rigel 工具发现了南京大学《编译原理》课程实验项目 C-{}- 编译器中许多常规方法未能发现的错误。
+
+
+keywords-cn: 编译器测试；随机代码生成；自动化测试
+
+# 英文摘要关键字，可使用LaTeX代码
+abstract-en: |
+    We introduce equivalence modulo inputs (EMI), a simple, widely applicable methodology for compiler verification. 
+    This method is based on these two steps: 
+    1)	dynamically executing a program on some test inputs to get its control flow. 
+    2)	based on control flow, generate its equivalent code for comparison. 
+    Indeed, the test inputs induce a natural collection of the original program's EMI variants, which can help differentially test any compiler and specifically target the difficult-to-find miscompilations.
+    To create a practical implementation of EMI for validating C-{}-(a tiny subset of C) compilers, we profile a program's test executions and stochastically prune its unexecuted code. 
+    My practical realization of the EMI concept targeting C-{}- compilers via the `profile and prune' strategy has led to several confirmed, unique bugs for C-{}- compilers from `Principles and Techniques' of Compilers of Nanjing University. In the past, these miscompilations were hard to notice.
+
+keywords-en: Compiler testing; code generation; automated testing 

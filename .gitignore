@@ -10,3 +10,6 @@ emi_checker
 
 platform.info
 
+*.lyx#
+
+*.lyx~
